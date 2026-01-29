@@ -233,60 +233,19 @@ function load() {
             case "travel":
             case "video":
             case "trip":
+            case "blog":
+            case "experience":
+            case "tarfand":
+            case "book":
+            case "trick":
               tmpName = file.split("-")[3].split(".")[0];
-              siteUrl = "https://" + name + ".mhkarami97.ir/" + tmpName;
+              siteUrl = "https://" + name + ".mhkarami97.ir/posts/" + tmpName;
               break;
 
             case "music":
               tmpName = file.split(".")[0];
               tmpName = tmpName.substring(11);
               siteUrl = "https://" + name + ".mhkarami97.ir/" + tmpName;
-              break;
-
-            case "blog":
-            case "experience":
-              category = getCategory(dataAsString.split("---")[1]);
-              tmpName = file.split("-")[3].split(".")[0];
-              siteUrl =
-                "https://" +
-                name +
-                ".mhkarami97.ir/" +
-                category +
-                "/" +
-                tmpName;
-              break;
-
-            case "tarfand":
-              category = getCategory(dataAsString.split("---")[1]).replaceAll(
-                "'",
-                ""
-              );
-              tmpName = file
-                .split("-")
-                .slice(3)
-                .join("-")
-                .replaceAll(".md", "");
-              siteUrl =
-                "https://" +
-                name +
-                ".mhkarami97.ir/" +
-                category +
-                "/" +
-                tmpName;
-              break;
-
-            case "book":
-              tmpName = file.split(".")[0];
-              siteUrl = "https://" + name + ".mhkarami97.ir/" + tmpName;
-              break;
-
-            case "trick":
-              tmpName = file.split(".")[0];
-              siteUrl =
-                "https://" +
-                name +
-                ".mhkarami97.ir/" +
-                tmpName.replaceAll("-", "/");
               break;
 
             case "link":
