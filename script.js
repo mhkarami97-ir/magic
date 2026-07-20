@@ -24,8 +24,12 @@ function fetchData(theUrl) {
   let list = [];
 
   return fetch(theUrl)
-    .then((response) => response.json())
+    .then((response) => {
+      if (!response.ok) throw new Error(response.status);
+      return response.json();
+    })
     .then((data) => {
+      if (!Array.isArray(data)) throw new Error("Not an array");
       for (let item of data) {
         let url = item.download_url;
         let file = item.name;
@@ -36,7 +40,12 @@ function fetchData(theUrl) {
       setCache(cacheKey, list);
       return list;
     })
-    .catch((error) => console.error(error));
+    .catch((error) => {
+      console.error(error);
+      const stale = localStorage.getItem(cacheKey);
+      if (stale) return JSON.parse(stale).data;
+      return [];
+    });
 }
 
 function fetchDataAsString(theUrl) {
@@ -46,17 +55,23 @@ function fetchDataAsString(theUrl) {
 
   return fetch(theUrl)
     .then((data) => {
+      if (!data.ok) throw new Error(data.status);
       return data.text();
     })
     .then((text) => {
       setCache(cacheKey, text);
       return text;
     })
-    .catch((error) => console.error(error));
+    .catch((error) => {
+      console.error(error);
+      const stale = localStorage.getItem(cacheKey);
+      if (stale) return JSON.parse(stale).data;
+      return "";
+    });
 }
 
 function randomItem(list) {
-  if (list.length === 0) {
+  if (!list || list.length === 0) {
     return null;
   } else {
     let index = Math.floor(Math.random() * list.length);
@@ -233,6 +248,7 @@ function load() {
   let textData = ["sentence", "poem"];
 
   let resultData = [];
+  let completed = 0;
 
   urls.forEach((data) => {
     let name = data.name;
@@ -241,6 +257,11 @@ function load() {
 
     fetchData(data.url)
       .then((list) => {
+        if (!list || list.length === 0) {
+          completed++;
+          if (completed === urls.length) renderResults();
+          return;
+        }
         let item = randomItem(list);
         let file = item.file;
 
@@ -296,27 +317,34 @@ function load() {
             id,
           });
 
-          if (resultData.length === 12) {
-            resultData = resultData.sort(function (a, b) {
-              if (a.id < b.id) {
-                return -1;
-              }
-              if (a.id > b.id) {
-                return 1;
-              }
-              return 0;
-            });
-
-            document.getElementById("wait").style.display = "none";
-
-            resultData.forEach((i) => {
-              printData(i);
-            });
-          }
+          completed++;
+          if (completed === urls.length) renderResults();
         });
       })
-      .catch((error) => console.error(error));
+      .catch((error) => {
+        console.error(error);
+        completed++;
+        if (completed === urls.length) renderResults();
+      });
   });
+
+  function renderResults() {
+    resultData = resultData.sort(function (a, b) {
+      if (a.id < b.id) {
+        return -1;
+      }
+      if (a.id > b.id) {
+        return 1;
+      }
+      return 0;
+    });
+
+    document.getElementById("wait").style.display = "none";
+
+    resultData.forEach((i) => {
+      printData(i);
+    });
+  }
 }
 
 load();
