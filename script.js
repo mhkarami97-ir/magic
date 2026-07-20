@@ -1,4 +1,26 @@
+const CACHE_EXPIRY_DAYS = 30;
+
+function getCached(key) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return null;
+  const { data, timestamp } = JSON.parse(raw);
+  const ageMs = Date.now() - timestamp;
+  if (ageMs > CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000) {
+    localStorage.removeItem(key);
+    return null;
+  }
+  return data;
+}
+
+function setCache(key, data) {
+  localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+}
+
 function fetchData(theUrl) {
+  const cacheKey = "fetch_" + theUrl;
+  const cached = getCached(cacheKey);
+  if (cached) return Promise.resolve(cached);
+
   let list = [];
 
   return fetch(theUrl)
@@ -11,15 +33,24 @@ function fetchData(theUrl) {
         list.push({ url, file });
       }
 
+      setCache(cacheKey, list);
       return list;
     })
     .catch((error) => console.error(error));
 }
 
 function fetchDataAsString(theUrl) {
+  const cacheKey = "fetch_str_" + theUrl;
+  const cached = getCached(cacheKey);
+  if (cached) return Promise.resolve(cached);
+
   return fetch(theUrl)
     .then((data) => {
       return data.text();
+    })
+    .then((text) => {
+      setCache(cacheKey, text);
+      return text;
     })
     .catch((error) => console.error(error));
 }
